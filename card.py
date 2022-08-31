@@ -1,12 +1,16 @@
+"""BlackJack Game - single card class"""
+
+
 class InvalidCardFigure(Exception):
-    pass
+    """Exception when card figure is invalid"""
 
 
 class InvalidCardColor(Exception):
-    pass
+    """"Exception when card color is invalid"""
 
 
 class Card:
+    """Card abstraction"""
     card_colors = ['kier', 'trefl', 'pik', 'karo']
     card_figures = list(range(2, 11)) + ['A', 'K', 'Q', 'J']
 
@@ -21,6 +25,7 @@ class Card:
 
     @staticmethod
     def assign_value(figure):
+        """Assign card value on card figure"""
         if figure == 'A':
             return 11
         if figure in ['K', 'J', 'Q']:

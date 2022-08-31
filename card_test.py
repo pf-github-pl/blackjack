@@ -24,3 +24,6 @@ def test_card_creation_wrong_color():
 
 def test_card_representation():
     assert repr(Card('A', 'pik')) == 'A pik'
+    assert repr(Card('A', 'trefl')) == 'A trefl'
+    assert repr(Card('A', 'karo')) == 'A karo'
+    assert repr(Card('A', 'kier')) == 'A kier'
