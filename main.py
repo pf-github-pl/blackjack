@@ -133,4 +133,8 @@ class Game:
 
 
 if __name__ == '__main__':
-    Game().play()
+    play = True
+    while play:
+        Game().play()
+        play = True if input('Chcesz grać dalej? [T/n] ').upper() != 'N' else False
+
