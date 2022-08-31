@@ -1,34 +1,11 @@
 import itertools
 from random import shuffle
+from card import Card
 
 
 class HandOverflow(Exception):
     def __str__(self):
         return '<<< PRZEKROCZONO 21. GRA SKOŃCZONA! >>>'
-
-
-class Card:
-    def __init__(self, figure, color):
-        self.figure = figure
-        self.color = color
-        self.value = self.assign_value(figure)
-
-    @staticmethod
-    def assign_value(figure):
-        if figure == 'A':
-            return 11
-        elif figure in ['K', 'J', 'Q']:
-            return 10
-        elif figure in ['2', '3', '4', '5', '6', '7', '8', '9', '10']:
-            return int(figure)
-        else:
-            raise ValueError
-
-    def __str__(self):
-        return f'{self.figure} {self.color}'
-
-    def __repr__(self):
-        return f'{self.figure} {self.color}'
 
 
 class Deck:
@@ -38,7 +15,7 @@ class Deck:
     @staticmethod
     def create():
         cards = []
-        figures = [str(i) for i in range(2, 11)] + ['J', 'Q', 'K', 'A']
+        figures = list(range(2, 11) )+ ['J', 'Q', 'K', 'A']
         colors = ['pik', 'trefl', 'kier', 'karo']
         for figure, color in itertools.product(figures, colors):
             cards.append(Card(figure, color))
@@ -137,4 +114,3 @@ if __name__ == '__main__':
     while play:
         Game().play()
         play = True if input('Chcesz grać dalej? [T/n] ').upper() != 'N' else False
-
