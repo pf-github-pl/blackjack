@@ -2,6 +2,11 @@ import itertools
 from random import shuffle
 
 
+class HandOverflow(Exception):
+    def __str__(self):
+        return '<<< PRZEKROCZONO 21. GRA SKOŃCZONA! >>>'
+
+
 class Card:
     def __init__(self, figure, color):
         self.figure = figure
@@ -10,7 +15,9 @@ class Card:
 
     @staticmethod
     def assign_value(figure):
-        if figure in ['A', 'K', 'J', 'Q']:
+        if figure == 'A':
+            return 11
+        elif figure in ['K', 'J', 'Q']:
             return 10
         elif figure in ['2', '3', '4', '5', '6', '7', '8', '9', '10']:
             return int(figure)
@@ -18,7 +25,7 @@ class Card:
             raise ValueError
 
     def __str__(self):
-        return f'Karta: {self.figure} koloru: {self.color} ma wartość: {self.value}'
+        return f'{self.figure} {self.color}'
 
     def __repr__(self):
         return f'{self.figure} {self.color}'
@@ -26,13 +33,16 @@ class Card:
 
 class Deck:
     def __init__(self):
-        self.cards = []
+        self.cards = self.create()
 
-    def create(self):
+    @staticmethod
+    def create():
+        cards = []
         figures = [str(i) for i in range(2, 11)] + ['J', 'Q', 'K', 'A']
         colors = ['pik', 'trefl', 'kier', 'karo']
         for figure, color in itertools.product(figures, colors):
-            self.cards.append(Card(figure, color))
+            cards.append(Card(figure, color))
+        return cards
 
     def shuffle(self):
         shuffle(self.cards)
@@ -46,81 +56,81 @@ class Hand:
         self.cards = []
         self.value = 0
 
-    def get_cards(self, card):
-        if self.value + card.value > 21:
-            raise HandOverflow
-        else:
-            self.cards.append(card)
-            self.value += card.value
-
-
-class Croupier:
-    def __init__(self, hand):
-        self.hand = hand
-
 
 class Player:
-    def __init__(self, hand):
-        self.hand = hand
+    def __init__(self, role):
+        self.role = role
+        self.hand = Hand()
+
+    def get_cards(self, card):
+        self.hand.cards.append(card)
+        self.hand.value += card.value
+        if self.hand.value > 21:
+            raise HandOverflow
+
+    def show_one_card(self):
+        return f'{self.role} ma {self.hand.cards[1]}'
+
+    def show_hand(self):
+        return f'{self.role} ma {self.hand.cards}'
 
 
-class HandOverflow(Exception):
-    pass
+class Game:
+    def __init__(self):
+        self.croupier = Player('Krupier')
+        self.player = Player('Gracz')
+        self.deck = Deck()
 
+    def get_decision(self):
+        return input('Co chcesz zrobić (H - dobierz, S - stój): ').upper() == 'H'
 
-def play():
-    new_deck = Deck()
-    new_deck.create()
-    new_deck.shuffle()
+    def play(self):
+        self.deck.shuffle()
+        self.croupier.get_cards(self.deck.draw())
+        self.croupier.get_cards(self.deck.draw())
+        self.player.get_cards(self.deck.draw())
+        self.player.get_cards(self.deck.draw())
 
-    croupier_hand = Hand()
-    croupier = Croupier(croupier_hand)
-    croupier_hand.get_cards(new_deck.draw())
-    croupier_hand.get_cards(new_deck.draw())
+        print(self.croupier.show_one_card())
+        print(self.player.show_hand())
 
-    player_hand = Hand()
-    player = Player(player_hand)
-    player_hand.get_cards(new_deck.draw())
-    player_hand.get_cards(new_deck.draw())
+        while True:
+            decision = self.get_decision()
+            if decision:
+                try:
+                    next_card = self.deck.draw()
+                    self.player.get_cards(next_card)
+                    print(self.player.show_hand())
+                    if self.player.hand.value == 21:
+                        break
+                except HandOverflow as exception:
+                    print(exception)
+                    break
+            else:
+                break
 
-    print(f'Krupier ma: {croupier.hand.cards[:1]}')
-    print(f'Gracz ma {player.hand.cards}')
+        while self.player.hand.value > self.croupier.hand.value and self.player.hand.value < 21:
+            try:
+                next_card = self.deck.draw()
+                self.croupier.get_cards(next_card)
+            except HandOverflow as exception:
+                print(exception)
+                break
 
-    decision = input('Co chcesz zrobić (H - dobierz, S - stój): ')
-    while decision.upper() == 'H':
-        try:
-            card = new_deck.draw()
-            player_hand.get_cards(card)
-        except HandOverflow as exception:
-            print(card)
-            print(f'Niestety przegrywasz! {exception}')
-            raise
+        print(self.croupier.show_hand())
+        print(self.player.show_hand())
 
-        print(player.hand.cards)
-        decision = input('Co chcesz zrobić (H - dobierz, S - stój): ')
+        if self.player.hand.value > self.croupier.hand.value and self.player.hand.value <= 21:
+            print(f'Brawo wygrałeś {self.player.hand.value} do {self.croupier.hand.value}!')
+        elif self.player.hand.value == self.croupier.hand.value and self.player.hand.value <= 21:
+            print(f'Remis {self.player.hand.value} do {self.croupier.hand.value}')
+        elif self.player.hand.value < self.croupier.hand.value and self.croupier.hand.value > 21:
+            print(f'Brawo wygrałeś {self.player.hand.value} do {self.croupier.hand.value}!')
+        else:
+            print(f'Przegrałeś {self.player.hand.value} do {self.croupier.hand.value}.')
 
-    while player.hand.value > croupier.hand.value:
-        try:
-            croupier_hand.get_cards(new_deck.draw())
-        except HandOverflow:
-            print(card)
-            print('Krupier przegrywa!')
-            print(f'Karty krupiera to: {croupier.hand.cards}')
-            print(f'Twoje karty to: {player.hand.cards}')
-            raise
-
-    print(f'Karty krupiera to: {croupier.hand.cards}')
-    print(f'Twoje karty to: {player.hand.cards}')
-
-    if player.hand.value > croupier.hand.value:
-        print(f'Brawo wygrałeś {player.hand.value} do {croupier.hand.value}!')
-    elif player.hand.value == croupier.hand.value:
-        print(f'Remis {player.hand.value} do {croupier.hand.value}')
-    else:
-        print(f'Przegrana {player.hand.value} do {croupier.hand.value}.')
-
-    print(f'Po rozdaniu w talii pozostało {len(new_deck.cards)} kart.')
+        print(f'Po rozdaniu w talii pozostało {len(self.deck.cards)} kart.')
 
 
 if __name__ == '__main__':
-    play()
+    Game().play()
