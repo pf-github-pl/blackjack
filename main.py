@@ -1,31 +1,9 @@
-import itertools
-from random import shuffle
-from card import Card
+from deck import Deck
 
 
 class HandOverflow(Exception):
     def __str__(self):
         return '<<< PRZEKROCZONO 21. GRA SKOŃCZONA! >>>'
-
-
-class Deck:
-    def __init__(self):
-        self.cards = self.create()
-
-    @staticmethod
-    def create():
-        cards = []
-        figures = list(range(2, 11) )+ ['J', 'Q', 'K', 'A']
-        colors = ['pik', 'trefl', 'kier', 'karo']
-        for figure, color in itertools.product(figures, colors):
-            cards.append(Card(figure, color))
-        return cards
-
-    def shuffle(self):
-        shuffle(self.cards)
-
-    def draw(self):
-        return self.cards.pop(-1)
 
 
 class Hand:
